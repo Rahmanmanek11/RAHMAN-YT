@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Multi-Tab Auto-Reload (Ultimate)</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --danger-color: #d32f2f;
+            --success-color: #388e3c;
+            --warning-color: #f57c00;
+            --dark-color: #333;
+            --light-color: #f5f5f5;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin:0; 
+            padding:0; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            margin: 0 0 10px;
+            color: var(--dark-color);
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--danger-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-tabs-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tabs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .tabs-navigation {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .tab-button {
+            padding: 8px 15px;
+            background: #e3f2fd;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+        
+        .tab-button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-button:hover:not(.active) {
+            background: #bbdefb;
+        }
+        
+        .tabs-content {
+            position: relative;
+            min-height: 400px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background: #000;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .video-container iframe, 
+        .video-container > div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+        
+        .video-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: #333;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .status-panel {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            background: #f0f0f0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .status-item {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-label {
+            font-weight: 500;
+        }
+        
+        .timer { 
+            font-weight: bold; 
+            color: var(--danger-color);
+            font-size: 1.1rem;
+        }
+        
+        .controls { 
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button { 
+            padding: 10px 15px; 
+            background: var(--primary-color); 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+        
+        button:hover { 
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled { 
+            background: #cccccc; 
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background: #2e7d32;
+        }
+        
+        .btn-warning {
+            background: var(--warning-color);
+        }
+        
+        .btn-warning:hover {
+            background: #e65100;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+            outline: none;
+        }
+        
+        .error { 
+            color: var(--danger-color); 
+            background: #ffebee; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .success { 
+            color: var(--success-color); 
+            background: #e8f5e9; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .warning { 
+            color: var(--warning-color); 
+            background: #fff3e0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .video-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .video-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .video-item:last-child {
+            border-bottom: none;
+        }
+        
+        .video-item.active {
+            background: #e3f2fd;
+        }
+        
+        .video-title {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;
+        }
+        
+        .video-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .icon-btn {
+            background: transparent;
+            color: #666;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .icon-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .global-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+
+        /* Styles untuk refresh dan reset */
+        .refresh-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .refresh-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fab fa-youtube"></i> YouTube Multi-Tab Auto-Reload (Ultimate)</h1>
+            <p class="subtitle">Versi Paling Canggih - Kelola banyak video YouTube dengan auto-reload otomatis</p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="control-panel">
+                <h2><i class="fas fa-cog"></i> Kontrol Panel</h2>
+                
+                <div class="input-group">
+                    <label for="video-url">Tambah Video YouTube:</label>
+                    <input type="text" id="video-url" placeholder="https://www.youtube.com/watch?v=..." />
+                </div>
+                
+                <div class="controls">
+                    <button id="add-video-btn" class="btn-success">
+                        <i class="fas fa-plus"></i> Tambah Video
+                    </button>
+                    <button id="load-sample-btn" class="btn-warning">
+                        <i class="fas fa-vial"></i> Video Contoh
+                    </button>
+                </div>
+                
+                <div class="input-group">
+                    <label for="min-reload">Reload Min (detik):</label>
+                    <input type="number" id="min-reload" value="30" min="10" max="300" />
+                </div>
+                
+                <div class="input-group">
+                    <label for="max-reload">Reload Max (detik):</label>
+                    <input type="number" id="max-reload" value="45" min="20" max="600" />
+                </div>
+                
+                <div class="global-controls">
+                    <button id="toggle-all-btn" class="btn-success">
+                        <i class="fas fa-play"></i> Mulai Semua
+                    </button>
+                    <button id="pause-all-btn" class="btn-warning">
+                        <i class="fas fa-pause"></i> Jeda Semua
+                    </button>
+                    <button id="reload-all-btn">
+                        <i class="fas fa-redo"></i> Reload Semua
+                    </button>
+                </div>
+
+                <!-- Section Refresh & Reset -->
+                <div class="refresh-section">
+                    <h3><i class="fas fa-sync-alt"></i> Refresh & Reset</h3>
+                    <div class="refresh-controls">
+                        <button id="refresh-page-btn" class="btn-info">
+                            <i class="fas fa-sync"></i> Refresh Halaman
+                        </button>
+                        <button id="reset-stats-btn" class="btn-danger">
+                            <i class="fas fa-trash"></i> Reset Statistik
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="video-list" id="video-list">
+                    <div class="empty-state">
+                        <i class="fas fa-film"></i>
+                        <p>Belum ada video</p>
+                        <p>Tambahkan video YouTube untuk memulai</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="video-tabs-container">
+                <div class="tabs-header">
+                    <h2><i class="fas fa-play-circle"></i> Pemutar Video</h2>
+                    <div class="tabs-navigation" id="tabs-navigation">
+                        <!-- Tab buttons will be generated here -->
+                    </div>
+                </div>
+                
+                <div class="tabs-content" id="tabs-content">
+                    <div class="empty-state">
+                        <i class="fas fa-tv"></i>
+                        <p>Belum ada video yang dipilih</p>
+                        <p>Pilih video dari daftar untuk memulai</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats-panel">
+            <h2><i class="fas fa-chart-bar"></i> Statistik</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Video</div>
+                    <div class="stat-value" id="total-videos">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Video Aktif</div>
+                    <div class="stat-value" id="active-videos">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Reload</div>
+                    <div class="stat-value" id="total-reloads">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Waktu Tonton</div>
+                    <div class="stat-value" id="total-watch-time">00:00:00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Views</div>
+                    <div class="stat-value" id="total-views">0</div>
+                    <div class="stat-label">berhasil dilakukan</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi
+        const MIN_RELOAD_DELAY = 30 * 1000; // 30 detik
+        const MAX_RELOAD_DELAY = 45 * 1000; // 45 detik
+        const DEFAULT_VIDEO_ID = "Z_RSuCkHbxU";
+        
+        // State aplikasi
+        let youtubeAPILoaded = false;
+        let videos = [];
+        let activeTabId = null;
+        let totalReloads = 0;
+        let totalWatchTime = 0;
+        let totalViews = 0;
+        
+        // Load data dari localStorage saat inisialisasi
+        function loadFromLocalStorage() {
+            const savedStats = localStorage.getItem('youtubeReloaderStats');
+            if (savedStats) {
+                const stats = JSON.parse(savedStats);
+                totalReloads = stats.totalReloads || 0;
+                totalWatchTime = stats.totalWatchTime || 0;
+                totalViews = stats.totalViews || 0;
+            }
+        }
+        
+        // Save data ke localStorage
+        function saveToLocalStorage() {
+            const stats = {
+                totalReloads: totalReloads,
+                totalWatchTime: totalWatchTime,
+                totalViews: totalViews,
+                lastUpdated: new Date().toISOString()
+            };
+            localStorage.setItem('youtubeReloaderStats', JSON.stringify(stats));
+        }
+        
+        // Kelas untuk mengelola video
+        class VideoTab {
+            constructor(videoId, title = "Video YouTube") {
+                this.id = 'video-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                this.videoId = videoId;
+                this.title = title;
+                this.player = null;
+                this.reloadTimer = null;
+                this.countdownTimer = null;
+                this.startTime = null;
+                this.isRunning = true;
+                this.nextReloadTime = null;
+                this.reloadCount = 0;
+                this.watchTime = 0;
+                this.containerId = `player-${this.id}`;
+                this.status = "Memuat...";
+                
+                // Buat elemen tab dan konten
+                this.createTabElement();
+                this.createContentElement();
+                
+                // Inisialisasi player
+                this.initializePlayer();
+            }
+            
+            createTabElement() {
+                const tabsNav = document.getElementById('tabs-navigation');
+                const emptyState = document.querySelector('.tabs-content .empty-state');
+                
+                // Hapus empty state jika ada
+                if (emptyState) emptyState.style.display = 'none';
+                
+                this.tabButton = document.createElement('button');
+                this.tabButton.className = 'tab-button';
+                this.tabButton.textContent = this.title;
+                this.tabButton.setAttribute('data-tab', this.id);
+                
+                this.tabButton.addEventListener('click', () => {
+                    this.activateTab();
+                });
+                
+                tabsNav.appendChild(this.tabButton);
+            }
+            
+            createContentElement() {
+                const tabsContent = document.getElementById('tabs-content');
+                const emptyState = document.querySelector('.tabs-content .empty-state');
+                
+                // Hapus empty state jika ada
+                if (emptyState) emptyState.style.display = 'none';
+                
+                this.tabContent = document.createElement('div');
+                this.tabContent.className = 'tab-content';
+                this.tabContent.id = this.id;
+                
+                this.tabContent.innerHTML = `
+                    <div class="video-container">
+                        <div id="${this.containerId}">
+                            <div class="video-placeholder">
+                                <div>Memuat video YouTube...</div>
+                                <div style="font-size:14px; color:#ccc">${this.title}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-panel">
+                        <div class="status-item">
+                            <span class="status-label">Status:</span>
+                            <span id="status-${this.id}">${this.status}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Reload berikutnya:</span>
+                            <span id="countdown-${this.id}" class="timer">--:--:--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Durasi tonton:</span>
+                            <span id="watch-duration-${this.id}" class="timer">00:00:00</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Jumlah reload:</span>
+                            <span id="reload-count-${this.id}" class="timer">0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-${this.id}" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="toggle-${this.id}" class="btn-warning">
+                            <i class="fas fa-pause"></i> Jeda
+                        </button>
+                        <button id="reload-${this.id}">
+                            <i class="fas fa-redo"></i> Reload Sekarang
+                        </button>
+                        <button id="close-${this.id}" class="btn-danger">
+                            <i class="fas fa-times"></i> Tutup
+                        </button>
+                    </div>
+                `;
+                
+                tabsContent.appendChild(this.tabContent);
+                
+                // Tambahkan event listeners
+                document.getElementById(`toggle-${this.id}`).addEventListener('click', () => this.toggleAutoReload());
+                document.getElementById(`reload-${this.id}`).addEventListener('click', () => this.reloadVideo());
+                document.getElementById(`close-${this.id}`).addEventListener('click', () => this.closeTab());
+                
+                // Aktifkan tab ini
+                this.activateTab();
+            }
+            
+            activateTab() {
+                // Nonaktifkan semua tab
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Aktifkan tab ini
+                this.tabButton.classList.add('active');
+                this.tabContent.classList.add('active');
+                activeTabId = this.id;
+            }
+            
+            initializePlayer() {
+                if (!youtubeAPILoaded) {
+                    this.updateStatus("Menunggu YouTube API...");
+                    return;
+                }
+                
+                try {
+                    this.player = new YT.Player(this.containerId, {
+                        height: '100%',
+                        width: '100%',
+                        videoId: this.videoId,
+                        playerVars: {
+                            playsinline: 1,
+                            autoplay: 1,
+                            controls: 1,
+                            rel: 0,
+                            modestbranding: 1,
+                            enablejsapi: 1
+                        },
+                        events: {
+                            onReady: (e) => this.onPlayerReady(e),
+                            onStateChange: (e) => this.onPlayerStateChange(e),
+                            onError: (e) => this.onPlayerError(e)
+                        }
+                    });
+                } catch (e) {
+                    this.showError("Gagal inisialisasi player: " + e.message);
+                }
+            }
+            
+            onPlayerReady(e) {
+                this.updateStatus("Player siap, memutar video...");
+                e.target.playVideo();
+                this.startTime = Date.now();
+                this.updateWatchDuration();
+                this.scheduleNextReload();
+                setInterval(() => this.updateWatchDuration(), 1000);
+            }
+            
+            onPlayerStateChange(e) {
+                if (e.data === YT.PlayerState.ENDED) {
+                    this.reloadVideo();
+                } else if (e.data === YT.PlayerState.PLAYING) {
+                    this.updateStatus("Video sedang diputar");
+                } else if (e.data === YT.PlayerState.PAUSED) {
+                    this.updateStatus("Video dijeda");
+                }
+            }
+            
+            onPlayerError(e) {
+                let msg = "Error video: ";
+                switch(e.data){
+                    case 2: msg += "ID tidak valid"; break;
+                    case 5: msg += "Error HTML5 player"; break;
+                    case 100: msg += "Video tidak ditemukan"; break;
+                    case 101: case 150: msg += "Video tidak bisa di-embed"; break;
+                    default: msg += "Error tidak diketahui";
+                }
+                this.showError(msg);
+            }
+            
+            reloadVideo() {
+                if (this.player && typeof this.player.loadVideoById === 'function') {
+                    try {
+                        this.player.loadVideoById(this.videoId);
+                        this.updateStatus("Video dimuat ulang");
+                        this.startTime = Date.now();
+                        this.updateWatchDuration();
+                        this.reloadCount++;
+                        totalReloads++;
+                        totalViews++; // Tambah counter views
+                        this.updateReloadCount();
+                        this.scheduleNextReload();
+                        updateGlobalStats();
+                        saveToLocalStorage(); // Simpan ke localStorage
+                    } catch (e) {
+                        this.showError("Gagal memuat ulang video: " + e.message);
+                    }
+                } else {
+                    this.showError("Player belum siap");
+                }
+            }
+            
+            scheduleNextReload() {
+                if (!this.isRunning) return;
+                
+                clearTimeout(this.reloadTimer);
+                clearInterval(this.countdownTimer);
+                
+                const minReload = parseInt(document.getElementById('min-reload').value) * 1000 || MIN_RELOAD_DELAY;
+                const maxReload = parseInt(document.getElementById('max-reload').value) * 1000 || MAX_RELOAD_DELAY;
+                
+                const reloadDelay = this.getRandomDuration(minReload, maxReload);
+                this.nextReloadTime = Date.now() + reloadDelay;
+                
+                this.reloadTimer = setTimeout(() => this.reloadVideo(), reloadDelay);
+                this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+                this.updateCountdown();
+                
+                this.updateStatus(`Reload berikutnya dalam ${Math.round(reloadDelay/1000)} detik`);
+            }
+            
+            updateCountdown() {
+                if (!this.nextReloadTime) return;
+                
+                const timeLeft = this.nextReloadTime - Date.now();
+                const countdownElement = document.getElementById(`countdown-${this.id}`);
+                
+                if (timeLeft <= 0) {
+                    countdownElement.textContent = "00:00:00";
+                } else {
+                    countdownElement.textContent = this.formatTime(timeLeft);
+                    
+                    // Update progress bar
+                    const minReload = parseInt(document.getElementById('min-reload').value) * 1000 || MIN_RELOAD_DELAY;
+                    const maxReload = parseInt(document.getElementById('max-reload').value) * 1000 || MAX_RELOAD_DELAY;
+                    const totalTime = maxReload;
+                    const progress = ((totalTime - timeLeft) / totalTime) * 100;
+                    document.getElementById(`progress-${this.id}`).style.width = `${Math.min(progress, 100)}%`;
+                }
+            }
+            
+            updateWatchDuration() {
+                if (!this.startTime) return;
+                
+                const duration = Date.now() - this.startTime;
+                this.watchTime = duration;
+                totalWatchTime = videos.reduce((total, video) => total + video.watchTime, 0);
+                
+                document.getElementById(`watch-duration-${this.id}`).textContent = this.formatTime(duration);
+                updateGlobalStats();
+            }
+            
+            updateReloadCount() {
+                document.getElementById(`reload-count-${this.id}`).textContent = this.reloadCount;
+            }
+            
+            updateStatus(message) {
+                this.status = message;
+                document.getElementById(`status-${this.id}`).textContent = message;
+                console.log(`[Video ${this.title}] ${message}`);
+            }
+            
+            toggleAutoReload() {
+                this.isRunning = !this.isRunning;
+                const toggleBtn = document.getElementById(`toggle-${this.id}`);
+                
+                if (this.isRunning) {
+                    this.updateStatus("Auto-reload dilanjutkan");
+                    toggleBtn.innerHTML = '<i class="fas fa-pause"></i> Jeda';
+                    toggleBtn.className = 'btn-warning';
+                    this.scheduleNextReload();
+                } else {
+                    this.updateStatus("Auto-reload dijeda");
+                    toggleBtn.innerHTML = '<i class="fas fa-play"></i> Lanjutkan';
+                    toggleBtn.className = 'btn-success';
+                    clearTimeout(this.reloadTimer);
+                    clearInterval(this.countdownTimer);
+                    document.getElementById(`countdown-${this.id}`).textContent = "--:--:--";
+                    document.getElementById(`progress-${this.id}`).style.width = "0%";
+                }
+                
+                updateGlobalStats();
+            }
+            
+            closeTab() {
+                // Hentikan timer
+                clearTimeout(this.reloadTimer);
+                clearInterval(this.countdownTimer);
+                
+                // Hapus dari array videos
+                const index = videos.findIndex(v => v.id === this.id);
+                if (index !== -1) {
+                    videos.splice(index, 1);
+                }
+                
+                // Hapus elemen DOM
+                this.tabButton.remove();
+                this.tabContent.remove();
+                
+                // Hapus player
+                if (this.player && typeof this.player.destroy === 'function') {
+                    this.player.destroy();
+                }
+                
+                // Jika ini tab aktif, aktifkan tab lain atau tampilkan empty state
+                if (activeTabId === this.id) {
+                    const remainingTabs = document.querySelectorAll('.tab-button');
+                    if (remainingTabs.length > 0) {
+                        remainingTabs[0].click();
+                    } else {
+                        document.querySelector('.tabs-content .empty-state').style.display = 'block';
+                        activeTabId = null;
+                    }
+                }
+                
+                updateVideoList();
+                updateGlobalStats();
+            }
+            
+            showError(message) {
+                this.updateStatus(`Error: ${message}`);
+                
+                // Tampilkan pesan error sementara
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = message;
+                this.tabContent.insertBefore(errorDiv, this.tabContent.firstChild);
+                
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        errorDiv.parentNode.removeChild(errorDiv);
+                    }
+                }, 5000);
+            }
+            
+            getRandomDuration(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+            
+            formatTime(ms) {
+                const s = Math.floor(ms / 1000);
+                const h = Math.floor(s / 3600);
+                const m = Math.floor((s % 3600) / 60);
+                const sec = s % 60;
+                return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+            }
+        }
+        
+        // Fungsi utilitas
+        function getVideoIdFromUrl(url) {
+            try {
+                const u = new URL(url);
+                if (u.hostname.includes('youtu.be')) return u.pathname.slice(1);
+                if (u.searchParams.get('v')) return u.searchParams.get('v');
+            } catch (e) { return null; }
+            return null;
+        }
+        
+        function getVideoTitle(videoId) {
+            // Dalam implementasi nyata, Anda mungkin ingin menggunakan YouTube API
+            // untuk mendapatkan judul video. Untuk saat ini, kita gunakan placeholder.
+            return `Video ${videoId}`;
+        }
+        
+        function addVideoFromUrl(url) {
+            const videoId = getVideoIdFromUrl(url);
+            if (!videoId) {
+                showGlobalError("URL YouTube tidak valid");
+                return null;
+            }
+            
+            const title = getVideoTitle(videoId);
+            const videoTab = new VideoTab(videoId, title);
+            videos.push(videoTab);
+            
+            updateVideoList();
+            updateGlobalStats();
+            
+            return videoTab;
+        }
+        
+        function updateVideoList() {
+            const videoList = document.getElementById('video-list');
+            const emptyState = videoList.querySelector('.empty-state');
+            
+            if (videos.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            videoList.innerHTML = '';
+            
+            videos.forEach(video => {
+                const videoItem = document.createElement('div');
+                videoItem.className = `video-item ${activeTabId === video.id ? 'active' : ''}`;
+                
+                videoItem.innerHTML = `
+                    <div class="video-title">${video.title}</div>
+                    <div class="video-actions">
+                        <button class="icon-btn" data-action="play" title="Putar">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="icon-btn" data-action="reload" title="Reload">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="icon-btn" data-action="close" title="Tutup">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                videoItem.querySelector('[data-action="play"]').addEventListener('click', () => {
+                    video.activateTab();
+                    updateVideoList();
+                });
+                
+                videoItem.querySelector('[data-action="reload"]').addEventListener('click', () => {
+                    video.reloadVideo();
+                });
+                
+                videoItem.querySelector('[data-action="close"]').addEventListener('click', () => {
+                    video.closeTab();
+                });
+                
+                videoList.appendChild(videoItem);
+            });
+        }
+        
+        function updateGlobalStats() {
+            document.getElementById('total-videos').textContent = videos.length;
+            document.getElementById('active-videos').textContent = videos.filter(v => v.isRunning).length;
+            document.getElementById('total-reloads').textContent = totalReloads;
+            document.getElementById('total-watch-time').textContent = formatTime(totalWatchTime);
+            document.getElementById('total-views').textContent = totalViews.toLocaleString();
+        }
+        
+        function formatTime(ms) {
+            const s = Math.floor(ms / 1000);
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+        }
+        
+        function showGlobalError(message) {
+            // Buat notifikasi error global
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.right = '20px';
+            errorDiv.style.zIndex = '1000';
+            errorDiv.style.maxWidth = '300px';
+            
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
+        }
+        
+        function showGlobalSuccess(message) {
+            // Buat notifikasi sukses global
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            successDiv.style.position = 'fixed';
+            successDiv.style.top = '20px';
+            successDiv.style.right = '20px';
+            successDiv.style.zIndex = '1000';
+            successDiv.style.maxWidth = '300px';
+            
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.parentNode.removeChild(successDiv);
+                }
+            }, 3000);
+        }
+
+        // Fungsi refresh halaman
+        function refreshPage() {
+            showGlobalSuccess("Menyegarkan halaman...");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        // Fungsi reset statistik
+        function resetStats() {
+            if (confirm("Apakah Anda yakin ingin mereset semua statistik? Tindakan ini tidak dapat dibatalkan.")) {
+                totalReloads = 0;
+                totalWatchTime = 0;
+                totalViews = 0;
+                localStorage.removeItem('youtubeReloaderStats');
+                updateGlobalStats();
+                showGlobalSuccess("Semua statistik telah direset");
+            }
+        }
+        
+        // Event Listeners
+        document.getElementById('add-video-btn').addEventListener('click', () => {
+            const url = document.getElementById('video-url').value.trim();
+            if (!url) {
+                showGlobalError("Masukkan URL video YouTube");
+                return;
+            }
+            
+            const videoTab = addVideoFromUrl(url);
+            if (videoTab) {
+                document.getElementById('video-url').value = '';
+                showGlobalSuccess("Video berhasil ditambahkan");
+            }
+        });
+        
+        document.getElementById('load-sample-btn').addEventListener('click', () => {
+            const sampleVideos = [
+                "https://www.youtube.com/watch?v=Z_RSuCkHbxU",
+                "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "https://www.youtube.com/watch?v=9bZkp7q19f0"
+            ];
+            
+            sampleVideos.forEach(url => {
+                addVideoFromUrl(url);
+            });
+            
+            showGlobalSuccess(`${sampleVideos.length} video contoh ditambahkan`);
+        });
+        
+        document.getElementById('video-url').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('add-video-btn').click();
+            }
+        });
+        
+        document.getElementById('toggle-all-btn').addEventListener('click', () => {
+            videos.forEach(video => {
+                if (!video.isRunning) {
+                    video.toggleAutoReload();
+                }
+            });
+            showGlobalSuccess("Semua video dijalankan");
+        });
+        
+        document.getElementById('pause-all-btn').addEventListener('click', () => {
+            videos.forEach(video => {
+                if (video.isRunning) {
+                    video.toggleAutoReload();
+                }
+            });
+            showGlobalSuccess("Semua video dijeda");
+        });
+        
+        document.getElementById('reload-all-btn').addEventListener('click', () => {
+            videos.forEach(video => {
+                video.reloadVideo();
+            });
+            showGlobalSuccess("Semua video dimuat ulang");
+        });
+
+        // Event Listeners untuk refresh dan reset
+        document.getElementById('refresh-page-btn').addEventListener('click', refreshPage);
+        document.getElementById('reset-stats-btn').addEventListener('click', resetStats);
+        
+        // Load YouTube API
+        function loadYouTubeAPI() {
+            if (window.YT && window.YT.Player) {
+                youtubeAPILoaded = true;
+                videos.forEach(video => video.initializePlayer());
+                return;
+            }
+            
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+        
+        window.onYouTubeIframeAPIReady = function() {
+            youtubeAPILoaded = true;
+            console.log("YouTube API siap");
+            videos.forEach(video => video.initializePlayer());
+        };
+        
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage(); // Load data dari localStorage
+            loadYouTubeAPI();
+            updateGlobalStats();
+        });
+    </script>
+</body>
+</html>
